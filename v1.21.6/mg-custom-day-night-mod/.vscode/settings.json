@@ -1,0 +1,6 @@
+{
+    "java.jdt.ls.vmargs": "-Xmx8G -Xms1G -XX:+UseG1GC",
+    "java.jdt.ls.java.home": "d:/java/jdk-21.0.6+7",
+    "java.import.gradle.jvmArguments": "-Xmx8G -Xms1G",
+    "java.configuration.updateBuildConfiguration": "automatic"
+}
