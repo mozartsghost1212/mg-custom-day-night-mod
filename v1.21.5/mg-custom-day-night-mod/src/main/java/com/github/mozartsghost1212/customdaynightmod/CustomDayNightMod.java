@@ -46,6 +46,22 @@ public class CustomDayNightMod implements ModInitializer {
         System.out.println("[CustomDayNightMod] Custom Day/Night Mod successfully registered!");
     }
 
+    /**
+     * Handles the server tick event to control the day and night cycle in the Overworld.
+     * 
+     * <p>This method adjusts the world's time progression based on custom configuration settings,
+     * allowing for custom day and night lengths or multipliers. It also logs phase changes
+     * (from day to night or vice versa) if enabled in the configuration.</p>
+     *
+     * <ul>
+     *   <li>If absolute day or night lengths are set in the configuration, the time progression
+     *       is calculated to match those lengths.</li>
+     *   <li>Otherwise, configurable multipliers are used to speed up or slow down the day or night phases.</li>
+     *   <li>Logs phase changes to the console if enabled.</li>
+     * </ul>
+     *
+     * @param server The {@link MinecraftServer} instance for which the tick is being processed.
+     */
     private void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
