@@ -1,8 +1,30 @@
 package com.github.mozartsghost1212.customdaynightmod;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Properties;
 
+/**
+ * ModConfig handles the configuration for the Custom Day/Night Mod.
+ * <p>
+ * This class manages the loading and saving of configuration properties
+ * from a properties file located at "config/customdaynightmod.properties".
+ * The configuration includes multipliers and absolute lengths for day and night,
+ * as well as a flag for logging phase changes.
+ * </p>
+ * <ul>
+ *   <li><b>dayMultiplier</b>: Multiplier for the length of the day phase.</li>
+ *   <li><b>nightMultiplier</b>: Multiplier for the length of the night phase.</li>
+ *   <li><b>absoluteDayLength</b>: Absolute length of the day phase (overrides multiplier if set).</li>
+ *   <li><b>absoluteNightLength</b>: Absolute length of the night phase (overrides multiplier if set).</li>
+ *   <li><b>logPhaseChanges</b>: Whether to log day/night phase changes to the console.</li>
+ * </ul>
+ * <p>
+ * If the configuration file does not exist, it will be created with default values.
+ * </p>
+ */
 public class ModConfig {
     public static float dayMultiplier = 1.0f;
     public static float nightMultiplier = 1.0f;

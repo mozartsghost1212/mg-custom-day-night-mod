@@ -6,6 +6,27 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 
+/**
+ * The {@code CustomDayNightMod} class implements a Minecraft mod that allows customization
+ * of the day and night cycle lengths and speeds in the Overworld. It listens to server tick
+ * events and adjusts the world's time progression according to user-defined multipliers or
+ * absolute lengths for day and night phases, as specified in the mod configuration.
+ * 
+ * <p>Features:
+ * <ul>
+ *   <li>Customizable day and night lengths via multipliers or absolute tick values.</li>
+ *   <li>Logs phase changes (day/night) if enabled in the configuration.</li>
+ *   <li>Registers custom commands for runtime configuration.</li>
+ * </ul>
+ * 
+ * <p>Usage:
+ * <ul>
+ *   <li>Configure day/night multipliers or absolute lengths in the mod config file.</li>
+ *   <li>Enable logging to observe phase transitions in the server console.</li>
+ * </ul>
+ * 
+ * <p>This class is the main entry point for the mod and is registered as a {@link ModInitializer}.
+ */
 public class CustomDayNightMod implements ModInitializer {
 
     private enum Phase { DAY, NIGHT }

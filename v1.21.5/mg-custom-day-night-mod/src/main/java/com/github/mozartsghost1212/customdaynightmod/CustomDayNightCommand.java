@@ -5,6 +5,18 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
+/**
+ * Handles registration and execution of custom commands for the Custom Day/Night Mod.
+ * <p>
+ * Provides commands for reloading configuration, checking mod status, and toggling phase logging.
+ * <ul>
+ *   <li><b>/customdaynight reload</b> - Reloads the mod configuration from file.</li>
+ *   <li><b>/customdaynight status</b> - Displays current configuration values.</li>
+ *   <li><b>/customdaynight togglePhaseLogging</b> - Toggles logging of day/night phase changes.</li>
+ * </ul>
+ * <p>
+ * All commands require operator permission level 4.
+ */
 public class CustomDayNightCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("customdaynight")
