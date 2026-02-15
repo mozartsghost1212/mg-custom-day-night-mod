@@ -1,73 +1,112 @@
-# Custom Day/Night Mod
+# ☀️ Custom Day/Night Mod 🌙
 
-A server-side only Fabric mod for Minecraft **1.21.11** that allows you to configure the **length of day and night**.
+> **Take full control of Minecraft's day/night cycle — no client mod needed.**
 
-GitHub: [https://github.com/mozartsghost1212](https://github.com/mozartsghost1212)
+A lightweight, **server-side only** Fabric mod for Minecraft **1.21.11** that lets you customize exactly how long day and night last in the Overworld. Whether you want marathon building sessions under the sun or short, intense nights — this mod makes it effortless.
 
-## Features
+[![Fabric](https://img.shields.io/badge/mod%20loader-Fabric-blue)](https://fabricmc.net/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Modrinth](https://img.shields.io/badge/Modrinth-download-brightgreen)](https://modrinth.com/mod/minecraft-custom-daynight-mod)
 
-- Configure day and night length using either:
-  - `day_multiplier` and `night_multiplier` 
-  - OR `absolute_day_length` and `absolute_night_length` (in ticks)
-- Live config reload via `/customdaynight reload`
-- Check current settings via `/customdaynight status`
-- Dynamically toggle phase transition messages via `/customdaynight togglePhaseLogging`
-- No client mod required — works with vanilla clients
-- No change to world save data
+---
 
-## Configuration
+## ✨ Features
 
-File: `config/customdaynightmod.properties`
+- **Two ways to customize** — use speed multipliers *or* set exact tick-based durations
+- **Hot-reload config** — change settings on the fly without restarting the server
+- **In-game commands** — check status, reload config, and toggle logging from the chat
+- **Vanilla-client friendly** — players don't need to install anything
+- **Zero world data changes** — safe to add or remove at any time
 
-```
+---
+
+## 🚀 Getting Started
+
+1. Drop the mod `.jar` into your server's `mods/` folder (requires [Fabric Loader](https://fabricmc.net/) ≥ 0.18.4 and [Fabric API](https://modrinth.com/mod/fabric-api) ≥ 0.141.2).
+2. Start the server — a default config file will be created automatically.
+3. Edit `config/customdaynightmod.properties` to your liking (see below).
+4. Run `/customdaynight reload` in-game to apply changes instantly.
+
+---
+
+## ⚙️ Configuration
+
+**File:** `config/customdaynightmod.properties`
+
+```properties
+# Speed multipliers (1.0 = normal speed, 0.5 = half speed / twice as long)
 day_multiplier=1.0
 night_multiplier=1.0
+
+# Absolute lengths in ticks (overrides multipliers when > 0)
 absolute_day_length=0
 absolute_night_length=0
+
+# Log day/night transitions to the server console
 log_phase_changes=true
 ```
-The configuration file for this mod lets you control how long day and night last in Minecraft’s Overworld, and whether you want to see messages in the console when the game switches between day and night.
 
-**Note: A Minecraft tick is 50 milliseconds / 20 ticks per second.**
+> **Quick reference:** 1 Minecraft tick = 50 ms · 20 ticks = 1 second · 12,000 ticks = 10 real-time minutes (the default length of both day and night).
 
-### Example: 50 minute day, 10 minute night
+### How it works
 
-```
-day_multiplier=1.0
-night_multiplier=1.0
+| Setting | What it does |
+|---|---|
+| `day_multiplier` / `night_multiplier` | Scales the *speed* of time progression. A value of `0.5` makes that phase last **twice as long**; `2.0` makes it **twice as fast**. |
+| `absolute_day_length` / `absolute_night_length` | Sets the phase duration to an **exact number of ticks**. When set to a value greater than `0`, this takes priority over the multiplier. |
+| `log_phase_changes` | When `true`, prints a message to the server console each time the world transitions between day and night. |
+
+---
+
+### 📖 Examples
+
+#### Example 1: Extended day for builders (50 min day / 10 min night)
+
+```properties
 absolute_day_length=60000
 absolute_night_length=12000
 ```
 
-This configuration will make the day last 50 minutes (60,000 ticks) and the night last 10 minutes (12,000 ticks).
+☀️ Day lasts **50 minutes** (60,000 ticks) — plenty of time to build.  
+🌙 Night lasts **10 minutes** (12,000 ticks) — standard length.
 
-### Example: Day progresses 50% slower than night
+#### Example 2: Slow down daytime only (20 min day / 10 min night)
 
-```
+```properties
 day_multiplier=0.5
 night_multiplier=1.0
-absolute_day_length=0
-absolute_night_length=0
 ```
 
-With this configuration, the day will last twice as long as normal (progressing at half speed), while the night will remain at the default speed.
+| Phase | Default | With this config |
+|-------|---------|-----------------|
+| ☀️ Day | 10 min | **20 min** (half speed → twice as long) |
+| 🌙 Night | 10 min | **10 min** (unchanged) |
 
-**What is the actual time in minutes with these multipliers?**
+> **Tip:** You can mix and match — for example, use `absolute_day_length` for a precise daytime duration while using `night_multiplier` to scale the night.
 
-- **Day:**  
-  Default Minecraft day is 12,000 ticks (10 minutes).  
-  With `day_multiplier=0.5`, the day lasts twice as long:  
-  10 minutes × (1 / 0.5) = **20 minutes**
+---
 
-- **Night:**  
-  Default Minecraft night is 12,000 ticks (10 minutes).  
-  With `night_multiplier=1.0`, the night remains:  
-  10 minutes × (1 / 1.0) = **10 minutes**
+## 🔧 Commands
 
-So, with these settings, each Minecraft day will last **20 minutes** and each night will last **10 minutes**.
+All commands require **operator permission level 4** (full ops).
 
-## Commands
+| Command | Description |
+|---------|-------------|
+| `/customdaynight reload` | Reload the config file without restarting the server |
+| `/customdaynight status` | Display the current day/night settings in chat |
+| `/customdaynight togglePhaseLogging` | Toggle day/night transition messages on or off at runtime |
 
-- `/customdaynight reload` → Reloads the config file
-- `/customdaynight status` → Displays current settings
-- `/customdaynight togglePhaseLogging` → Enable/disable phase transition messages **at runtime**
+---
+
+## 🔗 Links
+
+- [Modrinth Page](https://modrinth.com/mod/minecraft-custom-daynight-mod)
+- [Source Code](https://github.com/mozartsghost1212/mg-custom-day-night-mod)
+- [Report Issues](https://github.com/mozartsghost1212/mg-custom-day-night-mod/issues)
+- [Buy Me a Coffee ☕](https://coff.ee/mozartsghost1212)
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
