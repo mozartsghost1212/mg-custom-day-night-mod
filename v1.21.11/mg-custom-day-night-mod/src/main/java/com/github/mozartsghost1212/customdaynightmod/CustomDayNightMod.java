@@ -3,6 +3,7 @@ package com.github.mozartsghost1212.customdaynightmod;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 
@@ -27,9 +28,17 @@ public class CustomDayNightMod implements ModInitializer {
     private enum Phase { DAY, NIGHT }
     private Phase previousPhase = null;
 
+    public static final String MOD_ID = "customdaynightmod";
+    public static String LOG_PREFIX = "[CustomDayNightMod]";
+
     @Override
     public void onInitialize() {
-        System.out.println("[CustomDayNightMod] Initializing Custom Day/Night Mod...");
+        String version = FabricLoader.getInstance()
+            .getModContainer(MOD_ID)
+            .map(container -> container.getMetadata().getVersion().getFriendlyString())
+            .orElse("unknown");
+        LOG_PREFIX = "[CustomDayNightMod v" + version + "]";
+        System.out.println(LOG_PREFIX + " Initializing...");
         ModConfig.loadConfig();
 
         ServerTickEvents.START_SERVER_TICK.register(server -> onServerTick(server));
@@ -38,7 +47,7 @@ public class CustomDayNightMod implements ModInitializer {
             CustomDayNightCommand.register(dispatcher);
         });
 
-        System.out.println("[CustomDayNightMod] Custom Day/Night Mod successfully registered!");
+        System.out.println(LOG_PREFIX + " Mod successfully registered!");
     }
 
     /**
@@ -62,15 +71,15 @@ public class CustomDayNightMod implements ModInitializer {
                     if (ModConfig.logPhaseChanges) {
                         if (currentPhase == Phase.DAY) {
                             if (ModConfig.absoluteDayLength > 0) {
-                                System.out.println("[CustomDayNightMod] Entering DAY phase... (absolute length: " + ModConfig.absoluteDayLength + " ticks)");
+                                System.out.println(LOG_PREFIX + " Entering DAY phase... (absolute length: " + ModConfig.absoluteDayLength + " ticks)");
                             } else {
-                                System.out.println("[CustomDayNightMod] Entering DAY phase... (multiplier: " + ModConfig.dayMultiplier + ")");
+                                System.out.println(LOG_PREFIX + " Entering DAY phase... (multiplier: " + ModConfig.dayMultiplier + ")");
                             }
                         } else {
                             if (ModConfig.absoluteNightLength > 0) {
-                                System.out.println("[CustomDayNightMod] Entering NIGHT phase... (absolute length: " + ModConfig.absoluteNightLength + " ticks)");
+                                System.out.println(LOG_PREFIX + " Entering NIGHT phase... (absolute length: " + ModConfig.absoluteNightLength + " ticks)");
                             } else {
-                                System.out.println("[CustomDayNightMod] Entering NIGHT phase... (multiplier: " + ModConfig.nightMultiplier + ")");
+                                System.out.println(LOG_PREFIX + " Entering NIGHT phase... (multiplier: " + ModConfig.nightMultiplier + ")");
                             }
                         }
                     }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "customdaynightmod",
-  "version": "2.0.0",
+  "version": "${version}",
   "name": "Custom Day/Night Mod",
   "description": "Allows configuration of day and night length.",
   "authors": ["mozartsghost1212"],
