@@ -113,11 +113,11 @@ All commands require **operator permission level 4** (full ops).
 | `/customdaynight` | Open the interactive settings menu (same as `/customdaynight menu`) |
 | `/customdaynight menu` | Open the interactive settings menu |
 
-The menu displays all current settings with clickable **[−]** / **[+]** buttons to adjust values in steps, a **[✎]** button to type a custom value, and action buttons to **[Save]**, **[Reload]**, or **[Defaults]**.
+The menu displays all current settings with clickable **[−]** / **[+]** buttons to adjust values in steps, a **[✎]** button to type a custom value, and action buttons to **[Save]**, **[Reload]**, or **[Defaults]**. Clicking a button pre-fills the command in your chat bar — just press **Enter** to confirm.
 
 A **duration summary** at the bottom shows the effective day, night, and full cycle lengths (e.g. *☀ Day: 10m 0s · ☽ Night: 10m 0s · ⏱ Full Cycle: 20m 0s*).
 
-> **Tip:** After running the command, press **T** to reopen chat — then you can click the buttons with your mouse.
+> **Tip:** After running the command, press **T** to reopen chat, click a button, then press **Enter**.
 
 ### Configuration Commands
 

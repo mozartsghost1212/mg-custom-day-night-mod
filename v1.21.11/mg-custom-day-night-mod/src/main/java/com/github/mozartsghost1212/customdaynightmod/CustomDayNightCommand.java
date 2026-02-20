@@ -131,7 +131,7 @@ public class CustomDayNightCommand {
 
         send(source, actions);
         send(source, Text.literal("  ").append(
-            Text.literal("Tip: Press T to open chat, then click buttons above.").formatted(Formatting.DARK_GRAY, Formatting.ITALIC)));
+            Text.literal("Tip: Press T to open chat, click a button, then press Enter.").formatted(Formatting.DARK_GRAY, Formatting.ITALIC)));
         send(source, divider);
 
         return 1;
@@ -181,8 +181,8 @@ public class CustomDayNightCommand {
         return Text.literal(label)
             .formatted(color, Formatting.BOLD)
             .styled(style -> style
-                .withClickEvent(new ClickEvent.RunCommand(command))
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal(tooltip))));
+                .withClickEvent(new ClickEvent.SuggestCommand(command))
+                .withHoverEvent(new HoverEvent.ShowText(Text.literal(tooltip + " (press Enter to confirm)"))));
     }
 
     private static MutableText createSuggestButton(String label, String command, String tooltip, Formatting color) {
@@ -190,7 +190,7 @@ public class CustomDayNightCommand {
             .formatted(color)
             .styled(style -> style
                 .withClickEvent(new ClickEvent.SuggestCommand(command))
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal(tooltip))));
+                .withHoverEvent(new HoverEvent.ShowText(Text.literal(tooltip + " (press Enter to confirm)"))));
     }
 
     private static MutableText createFloatRow(String label, float value, String property, float step) {
