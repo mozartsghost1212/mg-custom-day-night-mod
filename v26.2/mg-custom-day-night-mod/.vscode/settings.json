@@ -1,12 +1,12 @@
 {
     "java.jdt.ls.vmargs": "-Xmx8G -Xms1G -XX:+UseG1GC",
-    "java.jdt.ls.java.home": "E:\\portable\\java\\jdk-21.0.9+10",
-    "java.import.gradle.java.home": "E:\\portable\\java\\jdk-21.0.9+10",
+    "java.jdt.ls.java.home": "D:\\portable\\java\\jdk-25.0.4.1+1",
+    "java.import.gradle.java.home": "D:\\portable\\java\\jdk-25.0.4.1+1",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.configuration.runtimes": [
         {
-            "name": "JavaSE-21",
-            "path": "E:/portable/java/jdk-21.0.9+10",
+            "name": "JavaSE-25",
+            "path": "E:/portable/java/jdk-25.0.4.1+1",
             "default": true
         }
     ],
