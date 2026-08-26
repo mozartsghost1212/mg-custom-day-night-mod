@@ -32,7 +32,7 @@ public class ModConfig {
     public static final float MAX_MULTIPLIER = 100.0f;
     /** Minimum absolute length when enabled (>0). 20 ticks = 1 second. */
     public static final int MIN_ABSOLUTE_LENGTH = 20;
-    public static final int MAX_ABSOLUTE_LENGTH = 2_400_000; // ~2h real-time
+    public static final int MAX_ABSOLUTE_LENGTH = 2_400_000; // ~33h 20m real-time
 
     public static float dayMultiplier = 1.0f;
     public static float nightMultiplier = 1.0f;

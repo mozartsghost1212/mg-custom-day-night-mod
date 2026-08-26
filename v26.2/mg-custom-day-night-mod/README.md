@@ -29,8 +29,9 @@ A lightweight, **server-side only** Fabric mod for Minecraft **26.2** that lets 
 
 1. Drop the mod `.jar` into your server's `mods/` folder (requires [Fabric Loader](https://fabricmc.net/) ≥ 0.19.3 and [Fabric API](https://modrinth.com/mod/fabric-api) ≥ 0.158.0).
 2. Start the server — a default config file will be created automatically.
-3. Run `/customdaynight` in-game to open the **interactive settings menu**, or edit `config/customdaynightmod.properties` directly (see below).
-4. Use the menu buttons to tweak values, then click **[Save]** to persist changes to disk.
+3. Run `/customdaynight` in-game — the **interactive settings menu** prints in chat. **Press T to open chat**, then click any button and press **Enter** to apply.
+4. Alternatively, edit `config/customdaynightmod.properties` directly (see below).
+5. Click **[Save]** in the menu (then Enter) to persist changes to disk.
 
 ---
 
@@ -68,7 +69,7 @@ To prevent server instability, all values are automatically clamped to safe rang
 | Setting | Min | Max | Notes |
 |---------|-----|-----|-------|
 | `day_multiplier` / `night_multiplier` | 0.01 | 100.0 | Prevents time freeze or extreme speed |
-| `absolute_day_length` / `absolute_night_length` | 20 ticks (1 s) | 2,400,000 ticks (~2 h) | Set to `0` to disable (use multiplier instead) |
+| `absolute_day_length` / `absolute_night_length` | 20 ticks (1 s) | 2,400,000 ticks (~33 h 20 m) | Set to `0` to disable (use multiplier instead) |
 
 If a value outside the allowed range is entered via command or config file, it is silently clamped and a warning is shown in chat.
 
@@ -113,16 +114,24 @@ All commands require **operator permission level 4** (full ops).
 | `/customdaynight` | Open the interactive settings menu (same as `/customdaynight menu`) |
 | `/customdaynight menu` | Open the interactive settings menu |
 
-The menu displays all current settings with clickable **[−]** / **[+]** buttons to adjust values in steps, a **[✎]** button to type a custom value, and action buttons to **[Save]**, **[Reload]**, or **[Defaults]**. Clicking a button pre-fills the command in your chat bar — just press **Enter** to confirm.
+The menu displays all current settings, grouped into **Speed multipliers** and **Fixed lengths (override)**. Each row has clickable **[−]** and **[+]** buttons that pre-fill the target command in your chat bar, plus a **[✎]** button that pre-fills a blank value for typing. Action buttons **[Save]**, **[Reload]**, and **[Defaults]** work the same way. **Click a button, then press Enter** to apply.
+
+> **Prefer minutes over ticks?** Use `/customdaynight duration day <minutes>` or `/customdaynight duration night <minutes>` — accepts decimals (e.g. `12.5`).
+
+> **Why not one-click?** Vanilla clients show a *"Confirm Command Execution"* dialog on every `run_command` click that requires operator permissions. Pre-filling the chat bar avoids that popup and keeps the workflow snappy: click → Enter.
+
+Hover any value to see what it means and its allowed range. Fixed lengths display **OFF** when set to `0`, meaning the multiplier above controls that phase instead.
 
 A **duration summary** at the bottom shows the effective day, night, and full cycle lengths (e.g. *☀ Day: 10m 0s · ☽ Night: 10m 0s · ⏱ Full Cycle: 20m 0s*).
 
-> **Tip:** After running the command, press **T** to reopen chat, click a button, then press **Enter**.
+> **Tip:** Press **T** to open chat, click any button, then press **Enter**.
 
 ### Configuration Commands
 
 | Command | Description |
 |---------|-------------|
+| `/customdaynight duration day <minutes>` | Set the day phase length in **real-time minutes** (accepts decimals, e.g. `12.5`). Uses fixed length under the hood. |
+| `/customdaynight duration night <minutes>` | Set the night phase length in **real-time minutes**. |
 | `/customdaynight set dayMultiplier <value>` | Set the day speed multiplier |
 | `/customdaynight set nightMultiplier <value>` | Set the night speed multiplier |
 | `/customdaynight set absoluteDayLength <value>` | Set the absolute day length in ticks (0 to disable) |

@@ -64,6 +64,14 @@ public class CustomDayNightCommand {
                     .then(Commands.argument("value", IntegerArgumentType.integer(0))
                         .executes(ctx -> setAbsoluteNightLength(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "value")))))
             )
+            .then(Commands.literal("duration")
+                .then(Commands.literal("day")
+                    .then(Commands.argument("minutes", FloatArgumentType.floatArg(0.0f))
+                        .executes(ctx -> setDurationMinutes(ctx.getSource(), "day", FloatArgumentType.getFloat(ctx, "minutes")))))
+                .then(Commands.literal("night")
+                    .then(Commands.argument("minutes", FloatArgumentType.floatArg(0.0f))
+                        .executes(ctx -> setDurationMinutes(ctx.getSource(), "night", FloatArgumentType.getFloat(ctx, "minutes")))))
+            )
         );
     }
 
@@ -75,30 +83,30 @@ public class CustomDayNightCommand {
     private static int showMenu(CommandSourceStack source) {
         MutableComponent divider = Component.literal("═══════════════════════════════════").withStyle(ChatFormatting.GOLD);
         MutableComponent thinDiv = Component.literal("  ──────────────────────────────────").withStyle(ChatFormatting.DARK_GRAY);
-        MutableComponent title = Component.literal("  MozartsGhost1212 Custom Day/Night Mod").withStyle(ChatFormatting.YELLOW);
+        String modVersion = CustomDayNightMod.LOG_PREFIX.replace("[CustomDayNightMod ", "").replace("]", "");
+        MutableComponent title = Component.literal("  Custom Day/Night Mod  ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+            .append(Component.literal(modVersion).withStyle(ChatFormatting.DARK_GRAY));
 
         send(source, divider);
         send(source, title);
         send(source, divider);
 
-        // Day Multiplier
-        send(source, createFloatRow("Day Multiplier", ModConfig.dayMultiplier, "dayMultiplier", MULTIPLIER_STEP));
-
-        // Night Multiplier
-        send(source, createFloatRow("Night Multiplier", ModConfig.nightMultiplier, "nightMultiplier", MULTIPLIER_STEP));
-
-        send(source, Component.empty());
-
-        // Absolute Day Length
-        send(source, createIntRow("Abs. Day Length", ModConfig.absoluteDayLength, "absoluteDayLength", ABSOLUTE_LENGTH_STEP));
-
-        // Absolute Night Length
-        send(source, createIntRow("Abs. Night Length", ModConfig.absoluteNightLength, "absoluteNightLength", ABSOLUTE_LENGTH_STEP));
+        // ── Speed multipliers section ──
+        send(source, sectionHeader("Speed multipliers  ", "lower = longer phase, higher = faster phase"));
+        send(source, createFloatRow("Day speed", ModConfig.dayMultiplier, "dayMultiplier", MULTIPLIER_STEP));
+        send(source, createFloatRow("Night speed", ModConfig.nightMultiplier, "nightMultiplier", MULTIPLIER_STEP));
 
         send(source, Component.empty());
 
-        // Log Phase Changes
-        send(source, createBoolRow("Phase Logging", ModConfig.logPhaseChanges));
+        // ── Fixed lengths section (override the multipliers when > 0) ──
+        send(source, sectionHeader("Fixed lengths (override)  ", "OFF = use multiplier above; otherwise phase lasts exactly this many ticks"));
+        send(source, createIntRow("Day length", ModConfig.absoluteDayLength, "absoluteDayLength", ABSOLUTE_LENGTH_STEP));
+        send(source, createIntRow("Night length", ModConfig.absoluteNightLength, "absoluteNightLength", ABSOLUTE_LENGTH_STEP));
+
+        send(source, Component.empty());
+
+        // ── Logging section ──
+        send(source, createBoolRow("Log phase changes", ModConfig.logPhaseChanges));
 
         send(source, thinDiv);
 
@@ -121,20 +129,30 @@ public class CustomDayNightCommand {
 
         send(source, thinDiv);
 
-        // Action buttons
+        // Buttons pre-fill the chat bar; player presses Enter to confirm.
+        // (Vanilla clients show a "Confirm Command Execution" dialog on run_command clicks that require op perms.)
         MutableComponent actions = Component.literal("  ")
-            .append(createButton("[Save]", "/customdaynight save", "Save settings to file", ChatFormatting.GREEN))
+            .append(createSuggestButton("[Save]", "/customdaynight save", "Write current settings to config file", ChatFormatting.GREEN))
             .append(Component.literal("  "))
-            .append(createButton("[Reload]", "/customdaynight reload", "Reload settings from file", ChatFormatting.AQUA))
+            .append(createSuggestButton("[Reload]", "/customdaynight reload", "Discard unsaved changes and reload from file", ChatFormatting.AQUA))
             .append(Component.literal("  "))
-            .append(createButton("[Defaults]", "/customdaynight defaults", "Reset to default values", ChatFormatting.RED));
+            .append(createSuggestButton("[Defaults]", "/customdaynight defaults", "Reset all values to defaults (not yet saved)", ChatFormatting.RED));
 
         send(source, actions);
-        send(source, Component.literal("  ").append(
-            Component.literal("Tip: Press T to open chat, click a button, then press Enter.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)));
+        send(source, Component.literal("  Press ").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)
+            .append(Component.literal("T").withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD, ChatFormatting.ITALIC))
+            .append(Component.literal(" to open chat, click a button, then press Enter.").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)));
         send(source, divider);
 
         return 1;
+    }
+
+    private static MutableComponent sectionHeader(String label, String tooltip) {
+        return Component.literal("  ").append(
+            Component.literal(label).withStyle(ChatFormatting.YELLOW)
+                .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(tooltip)))))
+            .append(Component.literal("(?)").withStyle(ChatFormatting.DARK_GRAY)
+                .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(tooltip)))));
     }
 
     // ── Duration Helpers ──────────────────────────────────────────────
@@ -177,20 +195,15 @@ public class CustomDayNightCommand {
         source.sendSuccess(() -> text, false);
     }
 
-    private static MutableComponent createButton(String label, String command, String tooltip, ChatFormatting color) {
+    /** Button that pre-fills the chat bar so the player can press Enter to confirm.
+     *  We avoid ClickEvent.RunCommand because vanilla clients pop a "Confirm Command Execution" dialog
+     *  on every click when the target command requires elevated permissions. */
+    private static MutableComponent createSuggestButton(String label, String command, String tooltip, ChatFormatting color) {
         return Component.literal(label)
             .withStyle(color, ChatFormatting.BOLD)
             .withStyle(style -> style
                 .withClickEvent(new ClickEvent.SuggestCommand(command))
-                .withHoverEvent(new HoverEvent.ShowText(Component.literal(tooltip + " (press Enter to confirm)"))));
-    }
-
-    private static MutableComponent createSuggestButton(String label, String command, String tooltip, ChatFormatting color) {
-        return Component.literal(label)
-            .withStyle(color)
-            .withStyle(style -> style
-                .withClickEvent(new ClickEvent.SuggestCommand(command))
-                .withHoverEvent(new HoverEvent.ShowText(Component.literal(tooltip + " (press Enter to confirm)"))));
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(tooltip + "\n(pre-fills chat — press Enter to confirm)"))));
     }
 
     private static MutableComponent createFloatRow(String label, float value, String property, float step) {
@@ -200,16 +213,22 @@ public class CustomDayNightCommand {
         String decStr = String.format("%.2f", decreased);
         String incStr = String.format("%.2f", increased);
 
+        MutableComponent valueDisplay = Component.literal(String.format("%.2f", value))
+            .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD)
+            .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(
+                "1.00 = vanilla speed\n0.50 = twice as long\n2.00 = twice as fast\nallowed range: "
+                + ModConfig.MIN_MULTIPLIER + " \u2013 " + ModConfig.MAX_MULTIPLIER))));
+
         return Component.literal("  " + label + ": ").withStyle(ChatFormatting.GRAY)
-            .append(Component.literal(String.format("%.2f", value)).withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD))
+            .append(valueDisplay)
             .append(Component.literal("  "))
-            .append(createButton("[-]", "/customdaynight set " + property + " " + decStr,
-                "Decrease to " + decStr, ChatFormatting.RED))
+            .append(createSuggestButton("[\u2212]", "/customdaynight set " + property + " " + decStr,
+                "Set to " + decStr, ChatFormatting.RED))
             .append(Component.literal(" "))
-            .append(createButton("[+]", "/customdaynight set " + property + " " + incStr,
-                "Increase to " + incStr, ChatFormatting.GREEN))
+            .append(createSuggestButton("[+]", "/customdaynight set " + property + " " + incStr,
+                "Set to " + incStr, ChatFormatting.GREEN))
             .append(Component.literal(" "))
-            .append(createSuggestButton("[✎]", "/customdaynight set " + property + " ",
+            .append(createSuggestButton("[\u270E]", "/customdaynight set " + property + " ",
                 "Type a custom value", ChatFormatting.YELLOW));
     }
 
@@ -218,17 +237,45 @@ public class CustomDayNightCommand {
         int decreased = (value - step <= 0) ? 0 : Math.max(ModConfig.MIN_ABSOLUTE_LENGTH, value - step);
         int increased = Math.min(ModConfig.MAX_ABSOLUTE_LENGTH, value + step);
 
+        MutableComponent valueDisplay;
+        if (value == 0) {
+            valueDisplay = Component.literal("OFF")
+                .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.BOLD)
+                .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(
+                    "0 ticks = disabled. The multiplier above controls this phase."))));
+        } else {
+            valueDisplay = Component.literal(value + " ticks")
+                .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD)
+                .append(Component.literal("  (" + formatDuration(value) + ")").withStyle(ChatFormatting.DARK_GRAY))
+                .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal(
+                    "Phase lasts exactly " + value + " ticks (" + formatDuration(value) + ")\n"
+                    + "allowed range: " + ModConfig.MIN_ABSOLUTE_LENGTH + " \u2013 " + ModConfig.MAX_ABSOLUTE_LENGTH + " ticks\n"
+                    + "set to 0 to disable and use the multiplier instead"))));
+        }
+
         return Component.literal("  " + label + ": ").withStyle(ChatFormatting.GRAY)
-            .append(Component.literal(String.valueOf(value)).withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD))
+            .append(valueDisplay)
             .append(Component.literal("  "))
-            .append(createButton("[-]", "/customdaynight set " + property + " " + decreased,
-                "Decrease to " + decreased, ChatFormatting.RED))
+            .append(createSuggestButton("[\u2212]", "/customdaynight set " + property + " " + decreased,
+                decreased == 0 ? "Disable (use multiplier)"
+                               : "Set to " + decreased + " ticks (" + formatDuration(decreased) + ")",
+                ChatFormatting.RED))
             .append(Component.literal(" "))
-            .append(createButton("[+]", "/customdaynight set " + property + " " + increased,
-                "Increase to " + increased, ChatFormatting.GREEN))
+            .append(createSuggestButton("[+]", "/customdaynight set " + property + " " + increased,
+                "Set to " + increased + " ticks (" + formatDuration(increased) + ")", ChatFormatting.GREEN))
             .append(Component.literal(" "))
-            .append(createSuggestButton("[✎]", "/customdaynight set " + property + " ",
-                "Type a custom value", ChatFormatting.YELLOW));
+            .append(createSuggestButton("[\u270E]", "/customdaynight set " + property + " ",
+                "Type a custom value in ticks (0 to disable)", ChatFormatting.YELLOW));
+    }
+
+    private static String formatMinutes(float minutes) {
+        if (minutes >= 60f && minutes == Math.round(minutes) && ((int) minutes) % 60 == 0) {
+            return ((int) (minutes / 60f)) + "h";
+        }
+        if (minutes == Math.round(minutes)) {
+            return ((int) minutes) + "m";
+        }
+        return String.format("%.2f", minutes) + "m";
     }
 
     private static MutableComponent createBoolRow(String label, boolean value) {
@@ -236,58 +283,87 @@ public class CustomDayNightCommand {
             .append(Component.literal(value ? "ON" : "OFF")
                 .withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED, ChatFormatting.BOLD))
             .append(Component.literal("  "))
-            .append(createButton("[Toggle]", "/customdaynight togglePhaseLogging",
-                "Toggle phase logging on/off", ChatFormatting.YELLOW));
+            .append(createSuggestButton("[Toggle]", "/customdaynight togglePhaseLogging",
+                "Turn console messages for day/night transitions " + (value ? "OFF" : "ON"), ChatFormatting.YELLOW));
     }
 
     // ── Set Commands (update value, then re-display menu) ─────────────
 
+    private static int setDurationMinutes(CommandSourceStack source, String phase, float minutes) {
+        int ticks = Math.round(minutes * 60f * TICKS_PER_SECOND);
+        int clamped = ModConfig.clampAbsoluteLength(ticks);
+        String label;
+        if ("day".equals(phase)) {
+            ModConfig.absoluteDayLength = clamped;
+            label = "Day length";
+        } else {
+            ModConfig.absoluteNightLength = clamped;
+            label = "Night length";
+        }
+        final int appliedTicks = clamped;
+        final boolean wasClamped = clamped != ticks;
+        source.sendSuccess(() -> {
+            String appliedText = (appliedTicks == 0)
+                ? "OFF (using multiplier)"
+                : formatDuration(appliedTicks) + "  (" + appliedTicks + " ticks)";
+            String suffix = wasClamped
+                ? "  (clamped from " + formatMinutes(minutes) + "; allowed: 0 or "
+                    + ModConfig.MIN_ABSOLUTE_LENGTH + "\u2013" + ModConfig.MAX_ABSOLUTE_LENGTH + " ticks)"
+                : "";
+            ChatFormatting color = wasClamped ? ChatFormatting.YELLOW : ChatFormatting.GREEN;
+            return Component.literal(CustomDayNightMod.LOG_PREFIX + " " + label + " set to "
+                + appliedText + suffix).withStyle(color);
+        }, true);
+        return showMenu(source);
+    }
+
     private static int setDayMultiplier(CommandSourceStack source, float value) {
         float clamped = ModConfig.clampMultiplier(value);
         ModConfig.dayMultiplier = clamped;
-        if (clamped != value) {
-            source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Value clamped to "
-                + String.format("%.2f", clamped) + " (allowed: " + ModConfig.MIN_MULTIPLIER + "–" + ModConfig.MAX_MULTIPLIER + ")").withStyle(ChatFormatting.RED), true);
-        }
-        source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Day multiplier set to "
-            + String.format("%.2f", clamped)).withStyle(ChatFormatting.GREEN), true);
+        source.sendSuccess(() -> multiplierFeedback("Day speed", value, clamped), true);
         return showMenu(source);
     }
 
     private static int setNightMultiplier(CommandSourceStack source, float value) {
         float clamped = ModConfig.clampMultiplier(value);
         ModConfig.nightMultiplier = clamped;
-        if (clamped != value) {
-            source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Value clamped to "
-                + String.format("%.2f", clamped) + " (allowed: " + ModConfig.MIN_MULTIPLIER + "–" + ModConfig.MAX_MULTIPLIER + ")").withStyle(ChatFormatting.RED), true);
-        }
-        source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Night multiplier set to "
-            + String.format("%.2f", clamped)).withStyle(ChatFormatting.GREEN), true);
+        source.sendSuccess(() -> multiplierFeedback("Night speed", value, clamped), true);
         return showMenu(source);
     }
 
     private static int setAbsoluteDayLength(CommandSourceStack source, int value) {
         int clamped = ModConfig.clampAbsoluteLength(value);
         ModConfig.absoluteDayLength = clamped;
-        if (clamped != value) {
-            source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Value clamped to "
-                + clamped + " (min: " + ModConfig.MIN_ABSOLUTE_LENGTH + ", max: " + ModConfig.MAX_ABSOLUTE_LENGTH + ", 0=off)").withStyle(ChatFormatting.RED), true);
-        }
-        source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Absolute day length set to "
-            + clamped).withStyle(ChatFormatting.GREEN), true);
+        source.sendSuccess(() -> lengthFeedback("Day length", value, clamped), true);
         return showMenu(source);
     }
 
     private static int setAbsoluteNightLength(CommandSourceStack source, int value) {
         int clamped = ModConfig.clampAbsoluteLength(value);
         ModConfig.absoluteNightLength = clamped;
-        if (clamped != value) {
-            source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Value clamped to "
-                + clamped + " (min: " + ModConfig.MIN_ABSOLUTE_LENGTH + ", max: " + ModConfig.MAX_ABSOLUTE_LENGTH + ", 0=off)").withStyle(ChatFormatting.RED), true);
-        }
-        source.sendSuccess(() -> Component.literal(CustomDayNightMod.LOG_PREFIX + " Absolute night length set to "
-            + clamped).withStyle(ChatFormatting.GREEN), true);
+        source.sendSuccess(() -> lengthFeedback("Night length", value, clamped), true);
         return showMenu(source);
+    }
+
+    private static MutableComponent multiplierFeedback(String label, float requested, float applied) {
+        String suffix = (requested == applied)
+            ? ""
+            : "  (clamped from " + String.format("%.2f", requested) + " to stay within "
+                + ModConfig.MIN_MULTIPLIER + "\u2013" + ModConfig.MAX_MULTIPLIER + ")";
+        ChatFormatting color = (requested == applied) ? ChatFormatting.GREEN : ChatFormatting.YELLOW;
+        return Component.literal(CustomDayNightMod.LOG_PREFIX + " " + label + " set to "
+            + String.format("%.2f", applied) + suffix).withStyle(color);
+    }
+
+    private static MutableComponent lengthFeedback(String label, int requested, int applied) {
+        String appliedText = (applied == 0) ? "OFF (using multiplier)" : applied + " ticks (" + formatDuration(applied) + ")";
+        String suffix = (requested == applied)
+            ? ""
+            : "  (clamped from " + requested + "; allowed: 0 or "
+                + ModConfig.MIN_ABSOLUTE_LENGTH + "\u2013" + ModConfig.MAX_ABSOLUTE_LENGTH + " ticks)";
+        ChatFormatting color = (requested == applied) ? ChatFormatting.GREEN : ChatFormatting.YELLOW;
+        return Component.literal(CustomDayNightMod.LOG_PREFIX + " " + label + " set to "
+            + appliedText + suffix).withStyle(color);
     }
 
     // ── Action Commands ───────────────────────────────────────────────
