@@ -28,7 +28,8 @@ public class CustomDayNightMod implements ModInitializer {
 
     private enum Phase { DAY, NIGHT }
     private Phase previousPhase = null;
-    private double accumulatedTime = 0.0d;
+    private double overworldTimeAccumulator = 0.0d;
+    private boolean vanillaAdvanceTimeDisabled = false;
 
     public static final String MOD_ID = "customdaynightmod";
     public static String LOG_PREFIX = "[CustomDayNightMod]";
@@ -65,8 +66,11 @@ public class CustomDayNightMod implements ModInitializer {
     private void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
-                if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
-                    world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                if (!vanillaAdvanceTimeDisabled) {
+                    if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
+                        world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                    }
+                    vanillaAdvanceTimeDisabled = true;
                 }
 
                 long time = world.getTimeOfDay() % 24000L;
@@ -100,11 +104,11 @@ public class CustomDayNightMod implements ModInitializer {
                     multiplier = (time < 12000L) ? ModConfig.dayMultiplier : ModConfig.nightMultiplier;
                 }
 
-                accumulatedTime += multiplier;
-                long ticksToAdvance = (long) accumulatedTime;
+                overworldTimeAccumulator += multiplier;
+                long ticksToAdvance = (long) overworldTimeAccumulator;
                 if (ticksToAdvance > 0) {
                     world.setTimeOfDay(world.getTimeOfDay() + ticksToAdvance);
-                    accumulatedTime -= ticksToAdvance;
+                    overworldTimeAccumulator -= ticksToAdvance;
                 }
             }
         }
