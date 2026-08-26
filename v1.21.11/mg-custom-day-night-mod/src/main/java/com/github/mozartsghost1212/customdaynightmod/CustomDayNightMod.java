@@ -30,7 +30,8 @@ public class CustomDayNightMod implements ModInitializer {
     private enum Phase { DAY, NIGHT }
     private Phase previousPhase = null;
     private double overworldTimeAccumulator = 0.0d;
-    private boolean vanillaAdvanceTimeDisabled = false;
+    private boolean vanillaAdvanceTimeChecked = false;
+    private boolean restoreAdvanceTimeOnStop = false;
 
     public static final String MOD_ID = "customdaynightmod";
     public static String LOG_PREFIX = "[CustomDayNightMod]";
@@ -46,7 +47,10 @@ public class CustomDayNightMod implements ModInitializer {
         ModConfig.loadConfig();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> resetRuntimeState());
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> resetRuntimeState());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            restoreVanillaAdvanceTime(server);
+            resetRuntimeState();
+        });
 
         ServerTickEvents.START_SERVER_TICK.register(server -> onServerTick(server));
 
@@ -70,11 +74,12 @@ public class CustomDayNightMod implements ModInitializer {
     private void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
-                if (!vanillaAdvanceTimeDisabled) {
+                if (!vanillaAdvanceTimeChecked) {
                     if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
                         world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                        restoreAdvanceTimeOnStop = true;
                     }
-                    vanillaAdvanceTimeDisabled = true;
+                    vanillaAdvanceTimeChecked = true;
                 }
 
                 long time = world.getTimeOfDay() % 24000L;
@@ -121,6 +126,20 @@ public class CustomDayNightMod implements ModInitializer {
     private void resetRuntimeState() {
         previousPhase = null;
         overworldTimeAccumulator = 0.0d;
-        vanillaAdvanceTimeDisabled = false;
+        vanillaAdvanceTimeChecked = false;
+        restoreAdvanceTimeOnStop = false;
+    }
+
+    private void restoreVanillaAdvanceTime(MinecraftServer server) {
+        if (!restoreAdvanceTimeOnStop) {
+            return;
+        }
+
+        for (ServerWorld world : server.getWorlds()) {
+            if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, true, server);
+                return;
+            }
+        }
     }
 }
