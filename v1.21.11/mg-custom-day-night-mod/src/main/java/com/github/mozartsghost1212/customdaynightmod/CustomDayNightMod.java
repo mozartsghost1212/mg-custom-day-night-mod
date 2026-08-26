@@ -2,6 +2,7 @@ package com.github.mozartsghost1212.customdaynightmod;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
@@ -43,6 +44,12 @@ public class CustomDayNightMod implements ModInitializer {
         LOG_PREFIX = "[CustomDayNightMod v" + version + "]";
         System.out.println(LOG_PREFIX + " Initializing...");
         ModConfig.loadConfig();
+
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            previousPhase = null;
+            overworldTimeAccumulator = 0.0d;
+            vanillaAdvanceTimeDisabled = false;
+        });
 
         ServerTickEvents.START_SERVER_TICK.register(server -> onServerTick(server));
 
