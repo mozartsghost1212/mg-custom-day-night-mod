@@ -30,7 +30,6 @@ public class CustomDayNightMod implements ModInitializer {
     private enum Phase { DAY, NIGHT }
     private Phase previousPhase = null;
     private double overworldTimeAccumulator = 0.0d;
-    private boolean vanillaAdvanceTimeChecked = false;
     private boolean restoreAdvanceTimeOnStop = false;
 
     public static final String MOD_ID = "customdaynightmod";
@@ -74,12 +73,9 @@ public class CustomDayNightMod implements ModInitializer {
     private void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
-                if (!vanillaAdvanceTimeChecked) {
-                    if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
-                        world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-                        restoreAdvanceTimeOnStop = true;
-                    }
-                    vanillaAdvanceTimeChecked = true;
+                if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
+                    world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                    restoreAdvanceTimeOnStop = true;
                 }
 
                 long time = world.getTimeOfDay() % 24000L;
@@ -126,7 +122,6 @@ public class CustomDayNightMod implements ModInitializer {
     private void resetRuntimeState() {
         previousPhase = null;
         overworldTimeAccumulator = 0.0d;
-        vanillaAdvanceTimeChecked = false;
         restoreAdvanceTimeOnStop = false;
     }
 
