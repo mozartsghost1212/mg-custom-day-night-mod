@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.rule.GameRules;
 
 /**
  * The {@code CustomDayNightMod} class implements a Minecraft Fabric mod that allows customization
@@ -27,6 +28,7 @@ public class CustomDayNightMod implements ModInitializer {
 
     private enum Phase { DAY, NIGHT }
     private Phase previousPhase = null;
+    private double accumulatedTime = 0.0d;
 
     public static final String MOD_ID = "customdaynightmod";
     public static String LOG_PREFIX = "[CustomDayNightMod]";
@@ -63,6 +65,10 @@ public class CustomDayNightMod implements ModInitializer {
     private void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
+                if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
+                    world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                }
+
                 long time = world.getTimeOfDay() % 24000L;
                 float multiplier;
                 Phase currentPhase = (time < 12000L) ? Phase.DAY : Phase.NIGHT;
@@ -94,8 +100,12 @@ public class CustomDayNightMod implements ModInitializer {
                     multiplier = (time < 12000L) ? ModConfig.dayMultiplier : ModConfig.nightMultiplier;
                 }
 
-                long newTime = world.getTimeOfDay() + (long) multiplier;
-                world.setTimeOfDay(newTime);
+                accumulatedTime += multiplier;
+                long ticksToAdvance = (long) accumulatedTime;
+                if (ticksToAdvance > 0) {
+                    world.setTimeOfDay(world.getTimeOfDay() + ticksToAdvance);
+                    accumulatedTime -= ticksToAdvance;
+                }
             }
         }
     }
