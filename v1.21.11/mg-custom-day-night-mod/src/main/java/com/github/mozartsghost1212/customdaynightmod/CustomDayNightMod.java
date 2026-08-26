@@ -45,11 +45,8 @@ public class CustomDayNightMod implements ModInitializer {
         System.out.println(LOG_PREFIX + " Initializing...");
         ModConfig.loadConfig();
 
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            previousPhase = null;
-            overworldTimeAccumulator = 0.0d;
-            vanillaAdvanceTimeDisabled = false;
-        });
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> resetRuntimeState());
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> resetRuntimeState());
 
         ServerTickEvents.START_SERVER_TICK.register(server -> onServerTick(server));
 
@@ -113,11 +110,17 @@ public class CustomDayNightMod implements ModInitializer {
 
                 overworldTimeAccumulator += multiplier;
                 long ticksToAdvance = (long) overworldTimeAccumulator;
-                if (ticksToAdvance > 0) {
+                if (ticksToAdvance != 0) {
                     world.setTimeOfDay(world.getTimeOfDay() + ticksToAdvance);
                     overworldTimeAccumulator -= ticksToAdvance;
                 }
             }
         }
+    }
+
+    private void resetRuntimeState() {
+        previousPhase = null;
+        overworldTimeAccumulator = 0.0d;
+        vanillaAdvanceTimeDisabled = false;
     }
 }
