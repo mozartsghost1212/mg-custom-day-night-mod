@@ -2,10 +2,12 @@ package com.github.mozartsghost1212.customdaynightmod;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.rule.GameRules;
 
 /**
  * The {@code CustomDayNightMod} class implements a Minecraft Fabric mod that allows customization
@@ -27,6 +29,9 @@ public class CustomDayNightMod implements ModInitializer {
 
     private enum Phase { DAY, NIGHT }
     private Phase previousPhase = null;
+    private double overworldTimeAccumulator = 0.0d;
+    private boolean restoreAdvanceTimeOnStop = false;
+    private Boolean overworldAdvanceTimeInitialValue = null;
 
     public static final String MOD_ID = "customdaynightmod";
     public static String LOG_PREFIX = "[CustomDayNightMod]";
@@ -40,6 +45,12 @@ public class CustomDayNightMod implements ModInitializer {
         LOG_PREFIX = "[CustomDayNightMod v" + version + "]";
         System.out.println(LOG_PREFIX + " Initializing...");
         ModConfig.loadConfig();
+
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> resetRuntimeState());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            restoreVanillaAdvanceTime(server);
+            resetRuntimeState();
+        });
 
         ServerTickEvents.START_SERVER_TICK.register(server -> onServerTick(server));
 
@@ -63,6 +74,14 @@ public class CustomDayNightMod implements ModInitializer {
     private void onServerTick(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
             if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
+                if (overworldAdvanceTimeInitialValue == null) {
+                    overworldAdvanceTimeInitialValue = world.getGameRules().getValue(GameRules.ADVANCE_TIME);
+                }
+                if (world.getGameRules().getValue(GameRules.ADVANCE_TIME)) {
+                    world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                    restoreAdvanceTimeOnStop = true;
+                }
+
                 long time = world.getTimeOfDay() % 24000L;
                 float multiplier;
                 Phase currentPhase = (time < 12000L) ? Phase.DAY : Phase.NIGHT;
@@ -94,8 +113,32 @@ public class CustomDayNightMod implements ModInitializer {
                     multiplier = (time < 12000L) ? ModConfig.dayMultiplier : ModConfig.nightMultiplier;
                 }
 
-                long newTime = world.getTimeOfDay() + (long) multiplier;
-                world.setTimeOfDay(newTime);
+                overworldTimeAccumulator += multiplier;
+                long ticksToAdvance = (long) overworldTimeAccumulator;
+                if (ticksToAdvance != 0) {
+                    world.setTimeOfDay(world.getTimeOfDay() + ticksToAdvance);
+                    overworldTimeAccumulator -= ticksToAdvance;
+                }
+            }
+        }
+    }
+
+    private void resetRuntimeState() {
+        previousPhase = null;
+        overworldTimeAccumulator = 0.0d;
+        restoreAdvanceTimeOnStop = false;
+        overworldAdvanceTimeInitialValue = null;
+    }
+
+    private void restoreVanillaAdvanceTime(MinecraftServer server) {
+        if (!restoreAdvanceTimeOnStop || overworldAdvanceTimeInitialValue == null) {
+            return;
+        }
+
+        for (ServerWorld world : server.getWorlds()) {
+            if (world.getRegistryKey() == ServerWorld.OVERWORLD) {
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, overworldAdvanceTimeInitialValue, server);
+                return;
             }
         }
     }
